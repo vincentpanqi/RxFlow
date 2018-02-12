@@ -9,9 +9,13 @@
 import RxFlow
 
 enum DemoStep: Step {
+    case onboarding
     case apiKey
     case apiKeyIsComplete
+    case login
+    case loginIsComplete
 
+    case dashboard
     case movieList
 
     case moviePicked (withMovieId: Int)

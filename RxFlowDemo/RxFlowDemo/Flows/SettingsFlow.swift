@@ -15,11 +15,13 @@ class SettingsFlow: Flow {
         return self.rootViewController
     }
 
-    let rootViewController = UISplitViewController()
+    private let rootViewController = UISplitViewController()
+    private let settingsStepper: SettingsStepper
+    private let services: AppServices
 
-    let settingsStepper: SettingsStepper
-    init(withService service: MoviesService, andStepper stepper: SettingsStepper) {
+    init(withServices services: AppServices, andStepper stepper: SettingsStepper) {
         self.settingsStepper = stepper
+        self.services = services
     }
 
     func navigate(to step: Step) -> NextFlowItems {
@@ -38,39 +40,41 @@ class SettingsFlow: Flow {
     }
 
     private func navigateToSettingsScreen () -> NextFlowItems {
-            let navigationController = UINavigationController()
-            let settingsListViewController = SettingsListViewController.instantiate()
-            let settingsViewController = SettingsViewController.instantiate()
+        let navigationController = UINavigationController()
+        let settingsListViewController = SettingsListViewController.instantiate()
+        let settingsViewModel = SettingsViewModel()
+        let settingsViewController = SettingsViewController.instantiate(withViewModel: settingsViewModel, andServices: self.services)
 
-            self.rootViewController.viewControllers = [navigationController, settingsViewController]
-            self.rootViewController.preferredDisplayMode = .allVisible
+        self.rootViewController.viewControllers = [navigationController, settingsViewController]
+        self.rootViewController.preferredDisplayMode = .allVisible
 
-            settingsViewController.title = "Api Key"
+        settingsViewController.title = "Api Key"
 
-            navigationController.viewControllers = [settingsListViewController]
-            if let navigationBarItem = navigationController.navigationBar.items?[0] {
-                let settingsButton = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.done,
-                                                     target: self.settingsStepper,
-                                                     action: #selector(SettingsStepper.settingsDone))
-                navigationBarItem.setRightBarButton(settingsButton, animated: false)
-            }
+        navigationController.viewControllers = [settingsListViewController]
+        if let navigationBarItem = navigationController.navigationBar.items?[0] {
+            let settingsButton = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.done,
+                                                 target: self.settingsStepper,
+                                                 action: #selector(SettingsStepper.settingsDone))
+            navigationBarItem.setRightBarButton(settingsButton, animated: false)
+        }
 
-            return NextFlowItems.multiple(flowItems: [NextFlowItem(nextPresentable: settingsListViewController, nextStepper: settingsListViewController),
-                                                      NextFlowItem(nextPresentable: settingsViewController, nextStepper: settingsViewController)])
+        return NextFlowItems.multiple(flowItems: [NextFlowItem(nextPresentable: settingsListViewController, nextStepper: settingsListViewController),
+                                                  NextFlowItem(nextPresentable: settingsViewController, nextStepper: settingsViewModel)])
     }
 
     private func navigateToApiKeyScreen () -> NextFlowItems {
-            let settingsViewController = SettingsViewController.instantiate()
-            settingsViewController.title = "Api Key"
-            self.rootViewController.showDetailViewController(settingsViewController, sender: nil)
-            return NextFlowItems.one(flowItem: NextFlowItem(nextPresentable: settingsViewController, nextStepper: settingsViewController))
+        let settingsViewModel = SettingsViewModel()
+        let settingsViewController = SettingsViewController.instantiate(withViewModel: settingsViewModel, andServices: self.services)
+        settingsViewController.title = "Api Key"
+        self.rootViewController.showDetailViewController(settingsViewController, sender: nil)
+        return NextFlowItems.one(flowItem: NextFlowItem(nextPresentable: settingsViewController, nextStepper: settingsViewModel))
     }
 
     private func navigateToAboutScreen () -> NextFlowItems {
-            let settingsAboutViewController = SettingsAboutViewController.instantiate()
-            settingsAboutViewController.title = "About"
-            self.rootViewController.showDetailViewController(settingsAboutViewController, sender: nil)
-            return NextFlowItems.one(flowItem: NextFlowItem(nextPresentable: settingsAboutViewController, nextStepper: settingsAboutViewController))
+        let settingsAboutViewController = SettingsAboutViewController.instantiate()
+        settingsAboutViewController.title = "About"
+        self.rootViewController.showDetailViewController(settingsAboutViewController, sender: nil)
+        return NextFlowItems.one(flowItem: NextFlowItem(nextPresentable: settingsAboutViewController, nextStepper: settingsAboutViewController))
     }
 
 }
